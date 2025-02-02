@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 
 def scrape_data(search_term, page_no=1):
-    # Build URL with the page number (default is 1)
+   
     url = f"https://services.india.gov.in/service/search?kw={search_term}&page_no={page_no}"
 
     headers = {
@@ -18,8 +18,8 @@ def scrape_data(search_term, page_no=1):
         soup = BeautifulSoup(response.content, 'html.parser')
         job_listings = []
 
-        # Adjust selector based on the page structure:
-        for job in soup.find_all('div', class_='edu-lern-con'):  # Update with the correct container class
+   
+        for job in soup.find_all('div', class_='edu-lern-con'): 
             job_link = job.find('a', class_='ext-link')
             job_description = job.find('p')
             
