@@ -1,10 +1,5 @@
 from django.shortcuts import render
-
 from .scraper import scrape_data
-
-
-
-
 
 def job_listings(request):
     # Capture search term and page number from the URL
