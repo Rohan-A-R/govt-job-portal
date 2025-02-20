@@ -1,7 +1,8 @@
 from django.shortcuts import render
+from django.core.paginator import Paginator
+from django.core.cache import cache
 from .scraper import scrape_data
 from .scraper1 import scrape_allgovernmentjobs_selenium, format_state_name
-from django.core.paginator import Paginator
 
 def job_listings(request):
     search_query = str(request.GET.get('search', '')).strip()
@@ -16,30 +17,33 @@ def job_listings(request):
     except ValueError:
         page_no = 1
 
-    scraped_data = []
-    scraped_data_1, scraped_data_2 = [], []
-
-    if category:
-        # Fetch jobs from the selected category (always get multiple pages)
-        scraped_data_2 = scrape_allgovernmentjobs_selenium(category=category, max_pages=5)
-
-    elif search_query:
-        # Format search query as a state-based URL
-        formatted_state = format_state_name(search_query)
-
-        if filter_type in ('all', 'services'):
-            scraped_data_1 = scrape_data(search_query)  
-
-        if filter_type in ('all', 'jobs'):
-            scraped_data_2 = scrape_allgovernmentjobs_selenium(state_name=formatted_state, max_pages=5)
-
-    # Combine results with source labels
-    scraped_data = (
-        [{**job, 'source': 'Government Services'} for job in scraped_data_1] +
-        [{**job, 'source': 'All Government Jobs'} for job in scraped_data_2]
-    )
-
-    # Apply Django pagination
+    # Create a unique cache key based on the query parameters
+    cache_key = f"jobs_{search_query}_{category}_{filter_type}"
+    # Try to get the data from cache first
+    scraped_data = cache.get(cache_key)
+    
+    if scraped_data is None:
+        scraped_data_1, scraped_data_2 = [], []
+    
+        if category:
+            # Fetch jobs from the selected category (always get multiple pages)
+            scraped_data_2 = scrape_allgovernmentjobs_selenium(category=category, max_pages=10)
+        elif search_query:
+            formatted_state = format_state_name(search_query)
+            if filter_type in ('all', 'services'):
+                scraped_data_1 = scrape_data(search_query)
+            if filter_type in ('all', 'jobs'):
+                scraped_data_2 = scrape_allgovernmentjobs_selenium(state_name=formatted_state, max_pages=10)
+    
+        # Combine results with source labels
+        scraped_data = (
+            [{**job, 'source': 'Government Services'} for job in scraped_data_1] +
+            [{**job, 'source': 'All Government Jobs'} for job in scraped_data_2]
+        )
+        # Store the scraped data in the cache for 1 hour (3600 seconds)
+        cache.set(cache_key, scraped_data, timeout=3600)
+    
+    # Apply Django pagination on the cached data
     paginator = Paginator(scraped_data, 20)
     page = paginator.get_page(page_no)
 

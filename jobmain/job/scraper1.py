@@ -29,13 +29,13 @@ CATEGORY_URLS = {
 
 def format_state_name(state_name):
     """Converts state name into URL-friendly format (e.g., 'Tamil Nadu' → 'tamil-nadu')."""
-    if not isinstance(state_name, str):  # Check if state_name is not a string
-        state_name = str(state_name)  # Convert it to string
+    if not isinstance(state_name, str):  
+        state_name = str(state_name)  
     return state_name.lower().replace(" ", "-")
 
 
-def scrape_allgovernmentjobs_selenium(category=None, state_name=None, max_pages=5):
-    """Scrapes job listings based on category selection or state-based search."""
+def scrape_allgovernmentjobs_selenium(category=None, state_name=None, start_page=1, max_pages=10):
+    """Scrapes job listings based on category selection or state-based search, starting from the given page."""
     
     if category and category in CATEGORY_URLS:
         base_url = f"https://allgovernmentjobs.in/{CATEGORY_URLS[category]}"
@@ -56,7 +56,8 @@ def scrape_allgovernmentjobs_selenium(category=None, state_name=None, max_pages=
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     all_jobs = []
 
-    for page_num in range(1, max_pages + 1):
+    # Start scraping from the provided start_page number
+    for page_num in range(start_page, start_page + max_pages):
         url = base_url if page_num == 1 else pagination_format.format(page_num)
         print(f"Scraping: {url}")  # Debugging output
 
