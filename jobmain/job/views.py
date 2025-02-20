@@ -4,7 +4,7 @@ from .scraper1 import scrape_allgovernmentjobs_selenium, format_state_name
 from django.core.paginator import Paginator
 
 def job_listings(request):
-    search_query = request.GET.get('search', '').strip()
+    search_query = str(request.GET.get('search', '')).strip()
     page_no = request.GET.get('page_no', '1')
     filter_type = request.GET.get('filter', 'all')
     category = request.GET.get('category', '').strip()
@@ -20,17 +20,18 @@ def job_listings(request):
     scraped_data_1, scraped_data_2 = [], []
 
     if category:
-        # If category is selected, fetch jobs from that category
-        scraped_data_2 = scrape_allgovernmentjobs_selenium(category, page_no)
+        # Fetch jobs from the selected category (always get multiple pages)
+        scraped_data_2 = scrape_allgovernmentjobs_selenium(category=category, max_pages=5)
+
     elif search_query:
         # Format search query as a state-based URL
         formatted_state = format_state_name(search_query)
-        search_url = f"https://allgovernmentjobs.in/govt-jobs-in-{formatted_state}/page/{page_no}"
 
         if filter_type in ('all', 'services'):
             scraped_data_1 = scrape_data(search_query)  
+
         if filter_type in ('all', 'jobs'):
-            scraped_data_2 = scrape_allgovernmentjobs_selenium(search_url, page_no)
+            scraped_data_2 = scrape_allgovernmentjobs_selenium(state_name=formatted_state, max_pages=5)
 
     # Combine results with source labels
     scraped_data = (
@@ -38,7 +39,8 @@ def job_listings(request):
         [{**job, 'source': 'All Government Jobs'} for job in scraped_data_2]
     )
 
-    paginator = Paginator(scraped_data, 10)
+    # Apply Django pagination
+    paginator = Paginator(scraped_data, 20)
     page = paginator.get_page(page_no)
 
     context = {

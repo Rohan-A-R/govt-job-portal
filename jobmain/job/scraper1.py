@@ -6,6 +6,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import time
 
+# Category-to-URL mapping
 CATEGORY_URLS = {
     "Medical": "medical-jobs",
     "Engineering": "engineering-jobs",
@@ -27,33 +28,47 @@ CATEGORY_URLS = {
 }
 
 def format_state_name(state_name):
-    """Converts state name to the required URL format."""
+    """Converts state name into URL-friendly format (e.g., 'Tamil Nadu' → 'tamil-nadu')."""
+    if not isinstance(state_name, str):  # Check if state_name is not a string
+        state_name = str(state_name)  # Convert it to string
     return state_name.lower().replace(" ", "-")
 
-def scrape_allgovernmentjobs_selenium(category_or_url, max_pages=5):
-    """Scrapes job listings based on category or state search."""
 
-    if category_or_url in CATEGORY_URLS:
-        base_url = f"https://allgovernmentjobs.in/{CATEGORY_URLS[category_or_url]}"
+def scrape_allgovernmentjobs_selenium(category=None, state_name=None, max_pages=5):
+    """Scrapes job listings based on category selection or state-based search."""
+    
+    if category and category in CATEGORY_URLS:
+        base_url = f"https://allgovernmentjobs.in/{CATEGORY_URLS[category]}"
+        pagination_format = f"https://allgovernmentjobs.in/{CATEGORY_URLS[category]}/page/{{}}"  # Category pagination
+    elif state_name:
+        formatted_state = format_state_name(state_name)
+        base_url = f"https://allgovernmentjobs.in/govt-jobs-in-{formatted_state}"
+        pagination_format = f"https://allgovernmentjobs.in/govt-jobs-in-{formatted_state}/page/{{}}"  # State-based pagination
     else:
-        base_url = category_or_url  # If it's a URL (state search)
+        return []  # No valid category or state provided
 
     options = Options()
-    options.add_argument("--headless")  
+    options.add_argument("--headless")
     options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
 
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-    driver.get(base_url)
-    time.sleep(3)
-
     all_jobs = []
-    page_count = 0
 
-    while page_count < max_pages:
+    for page_num in range(1, max_pages + 1):
+        url = base_url if page_num == 1 else pagination_format.format(page_num)
+        print(f"Scraping: {url}")  # Debugging output
+
+        driver.get(url)
+        time.sleep(3)  # Wait for page to load
+
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         job_cards = soup.find_all('div', class_='card-body p-3')
+
+        if not job_cards:
+            print(f"No jobs found on page {page_num}. Stopping pagination.")
+            break
 
         for job_card in job_cards:
             title_tag = job_card.find('div', class_='card-title h6 mb-0')
@@ -75,13 +90,7 @@ def scrape_allgovernmentjobs_selenium(category_or_url, max_pages=5):
                 'apply_link': apply_link
             })
 
-        try:
-            next_button = driver.find_element(By.LINK_TEXT, "Next")
-            next_button.click()
-            time.sleep(3)
-            page_count += 1
-        except:
-            break
+        print(f"Scraped {len(job_cards)} jobs from page {page_num}")
 
     driver.quit()
     return all_jobs
