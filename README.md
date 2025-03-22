@@ -20,17 +20,22 @@ git clone https://github.com/Rohan-A-R/govt-job-portal.git
 cd govt-job-portal
 ```
 
-### 3. Install `venv`
-Install the virtual environment package:
+### 3. Create a Virtual Environment
+Run the following command to create a virtual environment:
 ```bash
-pip install venv
+python3 -m venv env
 ```
 
-### 4. Create and Activate the Virtual Environment
-Create the virtual environment and activate it:
-```bash
-.\env\Scriptsctivate
-```
+### 4. Activate the Virtual Environment
+Activate the virtual environment:
+- On Windows:
+  ```bash
+  .\env\Scripts\activate
+  ```
+- On macOS/Linux:
+  ```bash
+  source env/bin/activate
+  ```
 
 ### 5. Install Required Libraries
 Install all required dependencies using the `requirements.txt` file:
@@ -59,12 +64,13 @@ Starting development server at http://127.0.0.1:8000/
 Quit the server with CTRL-BREAK.
 ```
 
-Press the `Ctrl` key and click on the provided link:
+Press the **Ctrl** key and click on the provided link:
 [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
 
 ---
 
 ## Features
+
 - **Job Listings**: Automatically scrapes and displays government job postings.
 - **Service Listings**: Provides a centralized platform for government-related services.
 - **Search and Filtering**: Users can filter jobs and services by type, location, and keywords.
@@ -74,19 +80,22 @@ Press the `Ctrl` key and click on the provided link:
 ---
 
 ## Future Plans
-- Integration with PostgreSQL for better database management.
-- AI-based job and service recommendations for personalized user experiences.
-- User authentication for saved jobs and alerts.
+
+- **PostgreSQL Integration**: Improve database management with PostgreSQL.
+- **AI-Based Recommendations**: Add personalized job and service recommendations.
+- **User Authentication**: Enable users to save jobs and set alerts for updates.
 
 ---
 
 ## Contributing
-Feel free to contribute to this project by submitting a pull request. For major changes, please open an issue first to discuss what you would like to change.
+
+Contributions are welcome! Feel free to submit a pull request. For major changes, please open an issue first to discuss your suggestions.
 
 ---
 
 ## License
-This project is licensed under the MIT License. See the `LICENSE` file for more details.
+
+This project is licensed under the MIT License. See the LICENSE file for more details.
 
 ---
 
